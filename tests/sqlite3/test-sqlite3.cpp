@@ -146,6 +146,32 @@ TEST_CASE("SQLite use and vector into", "[sqlite][use][into][vector]")
     }
 }
 
+// #266
+TEST_CASE("SQLite use and vector into, one result row, vector size 1", "[sqlite][use][into][vector]")
+{
+    soci::session sql(backEnd, connectString);
+
+    test3_table_creator tableCreator(sql);
+
+    sql << "insert into soci_test(id,name,subname) values( 1,'john','smith')";
+
+    {
+        std::vector<int> v(1);
+
+        statement s(sql.prepare << "Select id from soci_test where name = :name");
+
+        std::string name = "john";
+
+        s.exchange(use(name, "name"));
+        s.exchange(into(v));
+
+        s.define_and_bind();
+        s.execute(true);
+
+        CHECK(v.size() == 1);
+    }
+}
+
 
 // Test case from Amnon David 11/1/2007
 // I've noticed that table schemas in SQLite3 can sometimes have typeless
